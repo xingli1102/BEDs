@@ -18,13 +18,14 @@ python data_process/prepare_datasets.py --annot-dir datasets/Train/Annotations/ 
 Validation:
 python data_process/prepare_datasets.py --annot-dir datasets/Val/Annotations/ --output-dir datasets/Val/Val/ --stage val datasets/Val/Images/
 Test:
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/0/ --stage test datasets/Test/Images_stainNormed/0/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/1/ --stage test datasets/Test/Images_stainNormed/1/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/2/ --stage test datasets/Test/Images_stainNormed/2/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/3/ --stage test datasets/Test/Images_stainNormed/3/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/4/ --stage test datasets/Test/Images_stainNormed/4/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/5/ --stage test datasets/Test/Images_stainNormed/5/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/6/ --stage test datasets/Test/Images_stainNormed/6/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_pairs/0/ --stage test datasets/Test/Images_stainNormed/0/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_pairs/1/ --stage test datasets/Test/Images_stainNormed/1/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_pairs/2/ --stage test datasets/Test/Images_stainNormed/2/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_pairs/3/ --stage test datasets/Test/Images_stainNormed/3/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_pairs/4/ --stage test datasets/Test/Images_stainNormed/4/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_pairs/5/ --stage test datasets/Test/Images_stainNormed/5/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_pairs/6/ --stage test datasets/Test/Images_stainNormed/6/
+python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotations/ --output-dir datasets/Test/Test_GT/ --stage test_gt datasets/Test/Images_stainNormed/0/
 '''
 
 
@@ -55,7 +56,7 @@ def parse_args():
 		'--stage',
 		dest='stage',
 		required=True,
-		choices=["train", "val", "test"]
+		choices=["train", "val", "test", "test_gt"]
 	)
 	parser.add_argument(
 		'--subset-num',
@@ -274,9 +275,13 @@ def main(args):
 						cv2.imwrite(output_patch_path, output_patch)
 			# Make dataset for testing
 			else:
-				output_pair = np.concatenate([img, gt_final], axis=1)
-				output_patch_path = os.path.join(args.output_dir, ffname + '.png')
-				cv2.imwrite(output_patch_path, output_pair)
+				if args.stage == "test":
+					output_pair = np.concatenate([img, gt_final], axis=1)
+					output_patch_path = os.path.join(args.output_dir, ffname + '.png')
+					cv2.imwrite(output_patch_path, output_pair)
+				else:
+					output_patch_path = os.path.join(args.output_dir, ffname + '.png')
+					cv2.imwrite(output_patch_path, gt_mask)
 	return 0
 
 if __name__ == '__main__':

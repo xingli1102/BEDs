@@ -43,17 +43,41 @@ python data_process/prepare_datasets.py --annot-dir datasets/Val/Annotations/ --
 3. Generate testing data for each type of stain augmentation (0 is the original stain, 1-6 is the augmented stain):
 ```bash
 python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/0/ --stage test datasets/Test/Images_stainNormed/0/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/1/ --stage test datasets/Test/Images_stainNormed/1/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/2/ --stage test datasets/Test/Images_stainNormed/2/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/3/ --stage test datasets/Test/Images_stainNormed/3/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/4/ --stage test datasets/Test/Images_stainNormed/4/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/5/ --stage test datasets/Test/Images_stainNormed/5/
-python data_process/prepare_datasets.py --annot-dir datasets/Test/Annotation/ --output-dir datasets/Test/Test_pairs/6/ --stage test datasets/Test/Images_stainNormed/6/
 ```
+Or can simply run:
+```bash
+. prepare_testdata.sh
+```
+to prepare all testing images.
 
 ## Inference with pre-trained models
+If Step 6 in Setup and Step 3 in Data Processing was successfully done, run the following command to do inference for BEDs:
+```bash
+cd eval
+python BEDs_inference.py --model-dir ../models/deep_forest/ --output-dir ../experiments/BEDs_inference_results/ ../datasets/Test/Test_pairs/
+```
+The system would take a while to inference 7 difference stain augmentation with 33 models.
 
 ## Experiments and Evaluation
+After obtained the BEDs inference results in `experiments/BEDs_inference_results/`, following steps are followed to evaluate the performance reported in paper.
+
+
+### Experiments
+1. Benchmark
+2. Model 1, 2, 3
+3. BEDs 5
+4. BEDs 33
+5. BEDs 33 Model-Stain
+6. BEDs 33 Stain-Model
+7. BEDs 33 All
+
+### Pixel-wise Evaluation
+
+### Object-wise Evaluation
+To compute the objectwise F1 for each experiment, run:
+```bash
+python objectwise_DSC_eval.py --ref-dir ../datasets/Test/Test_GT/ --input-dir ../experiments/fusing_results/EXPERIMENT_DIR/ --output-dir ../experiments/objectwise_F1/
+```
 
 ## Train U-net by yourself
 
