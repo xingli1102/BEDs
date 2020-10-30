@@ -75,8 +75,35 @@ After obtained the BEDs inference results in `experiments/BEDs_inference_results
 ### Object-wise Evaluation
 To compute the objectwise F1 for each experiment, run:
 ```bash
-python objectwise_DSC_eval.py --ref-dir ../datasets/Test/Test_GT/ --input-dir ../experiments/fusing_results/EXPERIMENT_DIR/ --output-dir ../experiments/objectwise_F1/
+python objectwise_DSC_eval.py --ref-dir ../datasets/Test/Test_GT/ --input-dir ../experiments/fusing_results/EXPERIMENT_DIR/ --output-dir ../experiments/objectwise_F1/EXPERIMENT_DIR/
 ```
 
 ## Train U-net by yourself
+The U-net implementation used in this project is modified based on the encoder-decoder network with skip connection in [pix2pix](https://github.com/affinelayer/pix2pix-tensorflow). A validation during training option is added to the original work. If a validation path is defined, the training script will save the best model based on evaluation on the validation dataset. Otherwise, only the lastest model will be saved. If Step 1 & 2 in Data Processing was successful, the model can be trained using `train_unet.py`.
+For example, to train the benchmark:
+```bash
+python train_unet.py --input_dir datasets/Train/deep_forest/benchmark/train/ --val_dir datasets/Val/Val/ --mode train --output_dir checkpoints/unet_ckpts/benchmark/ --max_epochs 30 --summary_freq 1356 --save_freq 1356 --display_freq 5424 --scale_size 256
+```
+To train the model with sub-dataset:
+```bash
+python train_unet.py --input_dir datasets/Train/deep_forest/RANDOM_MODEL/train/ --val_dir datasets/Val/Val/ --mode train --output_dir checkpoints/unet_ckpts/RANDOM_MODEL/ --max_epochs 30 --summary_freq 904 --save_freq 904 --display_freq 4520 --scale_size 256
+```
+Or can simply run:
+```bash
+. deep_forest_train.sh
+```
+During training, the process can be monitored with `tensorboard`:
+```bash
+tensorboard --logdir checkpoints/unet_ckpts/deep_forest/RANDOM_MODEL/
+```
 
+### Freeze the models and prepare for inference
+After all the training are done, one can export and freeze the model with the tools provided in this package:
+```bash
+python tools/reduce_model.py --model-input checkpoints/unet_ckpts/deep_forest/MODEL_DIR/ --model-output checkpoints/unet_ckpts/deep_forest/MODEL_DIR/
+python tools/freeze_model.py --model-folder checkpoints/unet_ckpts/deep_forest/MODEL_DIR/
+```
+Or can simply run:
+```bash
+. freeze_model.sh
+```
