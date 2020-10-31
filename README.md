@@ -3,6 +3,7 @@ Tensorflow based implementation of BEDs as described in BEDs: Bagging Ensemble D
 
 The proposed method is shown in figure below:
 | Training | Testing |
+|----------|---------|
 |![fig2a](examples/Fig2a.png)|![fig2b](examples/Fig2b.png)|
 
 The performance overview for the proposed method is shown in figure below:
