@@ -67,8 +67,12 @@ python BEDs_inference.py --model-dir ../models/deep_forest/ --output-dir ../expe
 The system would take a while to inference 7 difference stain augmentation with 33 models.
 
 ## Experiments and Evaluation
-After obtained the BEDs inference results in `experiments/BEDs_inference_results/`, following steps are followed to evaluate the performance reported in paper.
+The ablation study, in the figure below, showed that the self-ensemble learning and testing stage stain augmentation were mutually complementary. Herein, the holistic model achieved the highest mean and median DSC, without using any extra training data:
+| Ablation Study | Distribution Boxplot |
+|----------|---------|
+|![fig5](examples/Fig5.png)|![fig3](examples/Fig3.png)|
 
+After obtained the BEDs inference results in `experiments/BEDs_inference_results/`, following steps are followed to evaluate the performance reported in paper.
 
 ### Experiments & Pixel-wise Evaluation
 
@@ -85,6 +89,9 @@ To compute the objectwise F1 for each experiment, run:
 ```bash
 python objectwise_DSC_eval.py --ref-dir ../datasets/Test/Test_GT/ --input-dir ../experiments/fusing_results/EXPERIMENT_DIR/ --output-dir ../experiments/objectwise_F1/EXPERIMENT_DIR/
 ```
+
+By following the procedure above, we obtained the following experiment results:
+![table1](examples/Table1.png)
 
 ## Train U-net by yourself
 The U-net implementation used in this project is modified based on the encoder-decoder network with skip connection in [pix2pix](https://github.com/affinelayer/pix2pix-tensorflow). A validation during training option is added to the original work. If a validation path is defined, the training script will save the best model based on evaluation on the validation dataset. Otherwise, only the lastest model will be saved. If Step 1 & 2 in Data Processing was successful, the model can be trained using `train_unet.py`.
