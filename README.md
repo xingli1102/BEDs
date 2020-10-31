@@ -1,6 +1,13 @@
 # BEDs
 Tensorflow based implementation of BEDs as described in BEDs: Bagging Ensemble Deep Segmentation for Nucleus Segmentation with Testing Stage Stain Augmentation.
 
+The proposed method is shown in figure below:
+![fig2a](examples/Fig2a.png)
+![fig2b](examples/Fig2b.png)
+
+The performance overview for the proposed method is shown in figure below:
+![fig4](examples/Fig4.png)
+
 ## Setup
 This repo tested in following environment:
 ```bash
