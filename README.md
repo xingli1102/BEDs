@@ -1,5 +1,5 @@
 # BEDs
-Tensorflow based implementation of BEDs as described in BEDs: Bagging Ensemble Deep Segmentation for Nucleus Segmentation with Testing Stage Stain Augmentation.
+Tensorflow based implementation of BEDs as described in BEDs: Bagging Ensemble Deep Segmentation for Nucleus Segmentation with Testing Stage Stain Augmentation by Xing Li, Haichun Yang, Jiaxin He, Aadarsh Jha, Agnes B. Fogo, Lee E. Wheless, Shilin Zhao and Yuankai Huo.
 
 The proposed method is shown in figure below:
 | Training | Testing |
@@ -69,7 +69,7 @@ The system would take a while to inference 7 difference stain augmentation with 
 ## Experiments and Evaluation
 The ablation study, in the figure below, showed that the self-ensemble learning and testing stage stain augmentation were mutually complementary. Herein, the holistic model achieved the highest mean and median DSC, without using any extra training data:
 | Ablation Study | Distribution Boxplot |
-|----------|---------|
+|----------------|----------------------|
 |![fig5](examples/Fig5.png)|![fig3](examples/Fig3.png)|
 
 After obtained the BEDs inference results in `experiments/BEDs_inference_results/`, following steps are followed to evaluate the performance reported in paper.
