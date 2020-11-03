@@ -63,6 +63,7 @@ python data_process/prepare_datasets.py --annot-dir datasets/Val/Annotations/ --
 python generate_stainTemplate.py --input_dir ../datasets/Train/Images/ --output_dir ../datasets/Train/Stain_template/
 ```
 `generate_stainTemplate.py` used k-means to cluster training images into 12 classes (`17, 20, 185, 255, 350, 412, 497, 926, 1041, 1094, 1210 _crop.png`). The templates are further evaluated on validation dataset to select the best 6 templates as the final stain augmentation targets. (This evaluation on validation dataset takes some time for inference) The final stain templates are `255, 350, 412, 926, 1041, 1043 _crop.png`.
+
 2. You can skip the previous step and use the template provided in `stain_template` to continue stain augmentation for testing images toward stain template:
 ```bash
 python stain_norm_dir.py --input_dir ../datasets/Test/Images/ --target_dir stain_template/ --output_dir ../datasets/Test/Test_pairs_final/ --ext tif
