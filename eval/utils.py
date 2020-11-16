@@ -11,6 +11,9 @@ from imutils import contours
 from progress.bar import Bar
 import time
 
+import spams
+import staintools
+
 from skimage.feature import peak_local_max
 from skimage.morphology import watershed
 from scipy import ndimage
@@ -406,3 +409,67 @@ def get_obj_pair(object_ref_list, object_eval_list, cnt_center_ref_list, cnt_cen
 		eval_pair_list.append([ref_select, object_eval_list[i]])
 		
 	return ref_pair_list, eval_pair_list
+	
+def stainAug(image_fname, ext, target_dir, stainAug_dir, output_stain_augmentation=False):
+	
+	stain_aug_list = []
+	image_ffname = os.path.splitext(os.path.basename(image_fname))[0]
+	to_transform = staintools.read_image(image_fname)
+	to_transform = staintools.LuminosityStandardizer.standardize(to_transform)
+	orignal_image = cv2.imread(image_fname, -1)
+	stain_aug_list.append(orignal_image)
+	if output_stain_augmentation:
+		# Write original images to png files
+		cv2.imwrite(os.path.join(stainAug_dir, image_ffname+'_0.png'), orignal_image)
+	print("Normalizing: " + image_ffname)
+	# Get stain normalization target file list
+	target_list = list_files(target_dir, 'png')
+	target_list = sorted(target_list, key = lambda x: int(x[:-9]))
+	for j, target_fname in enumerate(target_list):
+		target_ffname = os.path.splitext(os.path.basename(target_fname))[0]
+		print("Target: " + target_ffname)
+		target_filepath = os.path.join(target_dir, target_fname)
+		target = staintools.read_image(target_filepath)
+		target = staintools.LuminosityStandardizer.standardize(target)
+		normalizer = staintools.StainNormalizer(method='vahadane')
+		normalizer.fit(target)
+		transformed = normalizer.transform(to_transform)
+		transformed_BGR = cv2.cvtColor(transformed, cv2.COLOR_RGB2BGR)
+		stain_aug_list.append(transformed_BGR)
+		if output_stain_augmentation:
+			# Write stain normalized images to png files
+			cv2.imwrite(os.path.join(stainAug_dir, image_ffname+'_'+str(j+1)+'.png'), transformed_BGR)
+				
+	return stain_aug_list
+	
+def BEDs_infer(stain_aug_list, image_fname, model_dir, mask_dir, output_stain_augmentation=False):
+	
+	mask_list = []
+	image_ffname = os.path.splitext(os.path.basename(image_fname))[0]
+	
+	# Get segmentation models
+	model_list = list_subfolder(model_dir)[0]
+	model_list = sorted(model_list, key = lambda x: int(x[6:]))
+	for n, ckpt_dir in enumerate(model_list):
+		
+		# Loading tensorflow model for nuclei detection
+		nuclei_model_file = os.path.join(model_dir, os.path.join(ckpt_dir, 'frozen_model.pb'))
+		nuclei_detection_graph = load_graph(nuclei_model_file)
+		nuclei_detection_session = tf.Session(graph=nuclei_detection_graph)
+		# Get input and output tensor from graph for nuclei inference
+		nuclei_image_tensor = nuclei_detection_graph.get_tensor_by_name('image_tensor:0')
+		nuclei_output_tensor = nuclei_detection_graph.get_tensor_by_name('generate_output/output:0')
+		print("[*] Nuclei Detection Model Loaded")
+		
+		for s in range(len(stain_aug_list)):
+			stain_folder = str(s)
+			print("Inference Model %s for Stain %s." % (ckpt_dir, stain_folder))
+			img = stain_aug_list[s]
+			# Inference segmentation on image
+			mask_patch, pred_mask, pred_cnts_bw, pred_mask_bw = nuclei_detection_inference(img, nuclei_image_tensor, nuclei_output_tensor, nuclei_detection_session)
+			mask_list.append(pred_mask_bw)
+			if output_stain_augmentation:
+				img_output_path = os.path.join(mask_dir, image_ffname+'_'+ckpt_dir+'_'+str(s)+'.png')
+				cv2.imwrite(img_output_path, pred_mask_bw)
+			
+	return mask_list

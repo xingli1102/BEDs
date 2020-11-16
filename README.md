@@ -9,6 +9,13 @@ The proposed method is shown in figure below:
 The performance overview for the proposed method is shown in figure below:
 ![fig4](examples/Fig4.png)
 
+## Updates
+### Nov-16-2020
+Add an End-to-end inference script to test your custom dataset(image) with our [pre-trained models](https://drive.google.com/file/d/13mx5xXMtHRQ7iUJuPJCtnL9RaV_2vW2y/view?usp=sharing) and pre-defined stain targets(`./stain_template`).
+```bash
+python BEDs_e2e_infer.py --model_dir models/deep_forest/ --target_dir stain_template/ --annot_dir SPECIFY/IF/EVAL/ --output_dir experiments/BEDs_e2e_infer/ --ext tif IM_OR_FOLDER
+```
+
 ## Setup
 ### Requirements
 ```bash
