@@ -10,6 +10,12 @@ The performance overview for the proposed method is shown in figure below:
 ![fig4](examples/Fig4.png)
 
 ## Updates
+### Nov-22-2020
+Add options to skip stain augmentation and do 5 model fusion, please pull both `BEDs_e2e_infer.py` and `eval/utils.py` to enable this update. Turn `-BEDs_5` on to run 5 models inference. Turn `-auto` on to use 5 models selected randomly or to use the best 5 models we selected by default.
+```bash
+python BEDs_e2e_infer.py --model_dir models/deep_forest/ --target_dir SPECIFY/IF/DO/STAIN/AUG/ --annot_dir SPECIFY/IF/EVAL/ --output_dir experiments/BEDs_e2e_infer/BEDs_5_Model/ --ext tif -BEDs_5 datasets/Test/Images/
+```
+
 ### Nov-16-2020
 Add an End-to-end inference script to test your custom dataset(image) using BEDs All 33 with our [pre-trained models](https://drive.google.com/file/d/13mx5xXMtHRQ7iUJuPJCtnL9RaV_2vW2y/view?usp=sharing) and pre-defined stain targets(`./stain_template`). Our default input size is 1000x1000.
 ```bash

@@ -4,6 +4,7 @@ import sys
 import glob
 import cv2
 import math
+import random
 import numpy as np
 import tensorflow as tf
 import imutils
@@ -90,7 +91,14 @@ def dice(true_mask, pred_mask, non_seg_score=1.0):
 def clean_mask_using_cnts(mask, cnts):
 	'''
 		Clean the predicted mask based on predicted contour information
+		
 		Args:
+			mask: the BGR mask image from inference [h,w,3]
+			cnts: the BGR contour image from inference [h,w,3]
+		
+		Returns:
+			clean_mask: the cleaned BGR mask image [h,w,3]
+			clean_cnts: the cleaned BGR contour image [h,w,3]
 	'''
 	clean_mask = np.zeros(mask.shape, np.uint8)
 	clean_cnts = np.zeros(mask.shape, np.uint8)
@@ -197,8 +205,22 @@ def nuclei_detection_inference(img_src, nuclei_image_tensor, nuclei_output_tenso
 	
 	return full_seg, clean_mask_gray, clean_cnts_gray, clean_mask_bw
 	
-def infer_a_model(nuclei_model_file, im_file_list, im_or_folder, output_dir):
-
+def infer_a_model(nuclei_model_file, im_file_list, input_dir, output_dir):
+	'''
+		Do inference for a list of images using 1 model and compute the DSC
+		
+		Args:
+			nuclei_model_file: tf model filepath.
+			im_file_list: filename for the list of images with its groundtruth aside.
+			input_dir: input directory for input images.
+			output_dir: output directory for results.
+		
+		Returns:
+			avg_DSC: average DSC of the inferred images.
+			std_DSC: standard deviation of the inferred images.
+			max_DSC: maximum DSC of the inferred images.
+			min_DSC: minimum DSC of the inferred images.
+	'''
 	# Loading tensorflow model for nuclei detection
 	nuclei_detection_graph = load_graph(nuclei_model_file)
 	nuclei_detection_session = tf.Session(graph=nuclei_detection_graph)
@@ -221,7 +243,7 @@ def infer_a_model(nuclei_model_file, im_file_list, im_or_folder, output_dir):
 		# Stain Initialization
 		ffname = os.path.splitext(os.path.basename(im_file))[0]
 		# Get image and annotation
-		img_combine = cv2.imread(os.path.join(im_or_folder, im_file), -1)
+		img_combine = cv2.imread(os.path.join(input_dir, im_file), -1)
 		img = img_combine[:,:1000,:].copy()
 		annot = img_combine[:,1000:,:].copy()
 		annot_mask = annot[:,:,2].copy()
@@ -271,7 +293,16 @@ def infer_a_model(nuclei_model_file, im_file_list, im_or_folder, output_dir):
 	return avg_DSC, std_DSC, max_DSC, min_DSC
 	
 def majorVote_mask(mask_list):
-	"""Do majority vote for an odd number of masks pixelwise."""
+	'''
+		Do majority vote for an odd number of masks pixelwise.
+		
+		Args:
+			mask_list: a list of binary masks used as input for the majority vote.
+		
+		Returns:
+			majorMask_bw: the binary majority vote result.
+			majorMask: the BGR majority vote result.
+	'''
 	mask_count = len(mask_list)
 	sumMask = np.zeros(mask_list[0].shape)
 	majorMask_bw = np.zeros(mask_list[0].shape, np.uint8)
@@ -340,7 +371,8 @@ def dice_IoU(true_mask, pred_mask, non_seg_score=1.0):
 			pred_mask: Array with the same shape than true_mask.
 			
 		Returns:
-			A scalar representing the Dice coefficient between the two segmentations.
+			DSC: DSC between the two segmentations.
+			IoU: IoU between the two segmentations.
 	"""
 	assert true_mask.shape == pred_mask.shape
 	
@@ -356,7 +388,8 @@ def dice_IoU(true_mask, pred_mask, non_seg_score=1.0):
 	intersection = np.logical_and(true_mask, pred_mask)
 	union = np.logical_or(true_mask, pred_mask)
 	IoU = intersection.sum() / union.sum()
-	return 2. * intersection.sum() / im_sum, IoU
+	DSC = 2. * intersection.sum() / im_sum
+	return DSC, IoU
 	
 def evaluation_objectwise(ref_pair_list, eval_pair_list):
 	true_positive = 0
@@ -442,7 +475,16 @@ def stainAug(image_fname, ext, target_dir, stainAug_dir, output_stain_augmentati
 				
 	return stain_aug_list
 	
-def BEDs_infer(stain_aug_list, image_fname, model_dir, mask_dir, output_stain_augmentation=False):
+def BEDs_infer(stain_aug_list, image_fname, model_dir, mask_dir, BEDs_5=False, auto=False, output_stain_augmentation=False):
+	
+	model_lib = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6', 'random7', 'random8', 'random9', 'random10', 'random11', 'random12', 'random13', 'random14', 'random15', 'random16', 'random17', 'random18', 'random19', 'random20', 'random21', 'random22', 'random23', 'random24', 'random25', 'random26', 'random27', 'random28', 'random29', 'random30', 'random31', 'random32', 'random33']
+	
+	if BEDs_5:
+		if auto:
+			model_lib = random.sample(model_lib, 5)
+		else:
+			model_lib = ['random1', 'random6', 'random12', 'random26', 'random31']
+		
 	
 	mask_list = []
 	image_ffname = os.path.splitext(os.path.basename(image_fname))[0]
@@ -451,25 +493,25 @@ def BEDs_infer(stain_aug_list, image_fname, model_dir, mask_dir, output_stain_au
 	model_list = list_subfolder(model_dir)[0]
 	model_list = sorted(model_list, key = lambda x: int(x[6:]))
 	for n, ckpt_dir in enumerate(model_list):
+		if ckpt_dir in model_lib:
+			# Loading tensorflow model for nuclei detection
+			nuclei_model_file = os.path.join(model_dir, os.path.join(ckpt_dir, 'frozen_model.pb'))
+			nuclei_detection_graph = load_graph(nuclei_model_file)
+			nuclei_detection_session = tf.Session(graph=nuclei_detection_graph)
+			# Get input and output tensor from graph for nuclei inference
+			nuclei_image_tensor = nuclei_detection_graph.get_tensor_by_name('image_tensor:0')
+			nuclei_output_tensor = nuclei_detection_graph.get_tensor_by_name('generate_output/output:0')
+			print("[*] Nuclei Detection Model Loaded")
 		
-		# Loading tensorflow model for nuclei detection
-		nuclei_model_file = os.path.join(model_dir, os.path.join(ckpt_dir, 'frozen_model.pb'))
-		nuclei_detection_graph = load_graph(nuclei_model_file)
-		nuclei_detection_session = tf.Session(graph=nuclei_detection_graph)
-		# Get input and output tensor from graph for nuclei inference
-		nuclei_image_tensor = nuclei_detection_graph.get_tensor_by_name('image_tensor:0')
-		nuclei_output_tensor = nuclei_detection_graph.get_tensor_by_name('generate_output/output:0')
-		print("[*] Nuclei Detection Model Loaded")
-		
-		for s in range(len(stain_aug_list)):
-			stain_folder = str(s)
-			print("Inference Model %s for Stain %s." % (ckpt_dir, stain_folder))
-			img = stain_aug_list[s]
-			# Inference segmentation on image
-			mask_patch, pred_mask, pred_cnts_bw, pred_mask_bw = nuclei_detection_inference(img, nuclei_image_tensor, nuclei_output_tensor, nuclei_detection_session)
-			mask_list.append(pred_mask_bw)
-			if output_stain_augmentation:
-				img_output_path = os.path.join(mask_dir, image_ffname+'_'+ckpt_dir+'_'+str(s)+'.png')
-				cv2.imwrite(img_output_path, pred_mask_bw)
+			for s in range(len(stain_aug_list)):
+				stain_folder = str(s)
+				print("Inference Model %s for Stain %s." % (ckpt_dir, stain_folder))
+				img = stain_aug_list[s]
+				# Inference segmentation on image
+				mask_patch, pred_mask, pred_cnts_bw, pred_mask_bw = nuclei_detection_inference(img, nuclei_image_tensor, nuclei_output_tensor, nuclei_detection_session)
+				mask_list.append(pred_mask_bw)
+				if output_stain_augmentation:
+					img_output_path = os.path.join(mask_dir, image_ffname+'_'+ckpt_dir+'_'+str(s)+'.png')
+					cv2.imwrite(img_output_path, pred_mask_bw)
 			
 	return mask_list

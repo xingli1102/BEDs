@@ -27,7 +27,7 @@ def parse_args():
 		'--target_dir',
 		dest='target_dir',
 		help='Target stain transform Image',
-		default='./Images',
+		default=None,
 		type=str
 	)
 	parser.add_argument(
@@ -52,7 +52,17 @@ def parse_args():
 	type=str
 	)
 	parser.add_argument(
-		'display_partial_results',
+		'-BEDs_5',
+		action="store_true",
+		help="Do 5 model inference."
+	)
+	parser.add_argument(
+		'-auto',
+		action="store_true",
+		help="random select 5 models from 33 models, or use the best 5 models."
+	)
+	parser.add_argument(
+		'-display_partial_results',
 		action="store_true",
 		help="Save stain augmentation and single inference results."
 	)
@@ -75,17 +85,23 @@ def main(args):
 	
 	for i, image_fname in enumerate(image_list):
 		
-		# Do stain augmentation for input image
-		stainAug_dir = os.path.join(args.output_dir, 'Stain_Aug')
-		mkdir_if_nonexist(stainAug_dir)
-		print("Stain Augmentation ...")
-		stain_aug_list = stainAug(image_fname, args.ext, args.target_dir, stainAug_dir, output_stain_augmentation=args.display_partial_results)
+		# Do stain agumentation if a stain target directory specified
+		if args.target_dir != None:
+			# Do stain augmentation for input image
+			stainAug_dir = os.path.join(args.output_dir, 'Stain_Aug')
+			mkdir_if_nonexist(stainAug_dir)
+			print("Stain Augmentation ...")
+			input_img_list = stainAug(image_fname, args.ext, args.target_dir, stainAug_dir, output_stain_augmentation=args.display_partial_results)
+		
+		else:
+			# Read the input image
+			input_img_list = [cv2.imread(image_fname,-1)]
 	
 		# Do BEDs Inference for all sub models
 		mask_dir = os.path.join(args.output_dir, 'Infer_Masks')
 		mkdir_if_nonexist(mask_dir)
 		print("Do inference ...")
-		mask_list = BEDs_infer(stain_aug_list, image_fname, args.model_dir, mask_dir, output_stain_augmentation=args.display_partial_results)
+		mask_list = BEDs_infer(input_img_list, image_fname, args.model_dir, mask_dir, BEDs_5=args.BEDs_5, auto=args.auto, output_stain_augmentation=args.display_partial_results)
 		
 		# Do Majority Vote for all masks
 		print("Do Majority Vote ...")
